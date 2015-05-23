@@ -4,6 +4,7 @@ var COLS = 40;
 var ROWS = 30;
 var WIDTH = 1200;
 var HEIGHT = 900;
+var initialized = false;
 
 function getWebcam(){
 	navigator.getMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
@@ -20,7 +21,8 @@ function getWebcam(){
 				video.src = window.URL.createObjectURL(localMediaStream);
 				video.onloadedmetadata = function(e) {
 		      setTimeout(function(){
-		      	onFrame()
+		      	initialized = true;
+		      	requestAnimationFrame(onFrame);
 		      },1000);
 		    };
 			},
@@ -41,6 +43,7 @@ function Source(width, height) {
 	this.currentFrame = null;
 	this.previousFrame = null;
 	this.canvas = document.getElementById('sourceCanvas');
+	console.log(this.canvas);
 	this.canvas.width = this.width;
 	this.canvas.height = this.height;
 }
@@ -95,39 +98,16 @@ Source.prototype.detect = function() {
 			}
 		}
 	}
+	console.log(diff);
 }
-
-function Back(width, height) {
-	this.width = width;
-	this.height = height;
-	this.canvas = document.getElementById('backCanvas');
-	this.canvas.width = this.width;
-	this.canvas.height = this.height;
-}
-
-Back.prototype.drawCanvas = function() {
-	var c = this.canvas.getContext('2d');
-	var width = this.canvas.width;
-	var height = this.canvas.height;
-	if(scratching) {
-		c.save();
-		c.scale(-1, 1);
-	  c.drawImage(video, -width, 0, width, height);
-	  c.restore();
-	}
-	else{
-		c.putImageData(this.captureFrame, 0, 0);
-	}
-}
-
 
 function onFrame(event){
-	
+	if (initialized) {
+		sourceCanvas.drawCanvas();
+		requestAnimationFrame(onFrame);
+	}
 }
 
 var sourceCanvas = new Source(1200,900);
 
-var backCanvas = new Back(1200,900);
-
-view.size = new Size(this.width, this.height);
 getWebcam();
